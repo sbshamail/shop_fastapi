@@ -1,0 +1,46 @@
+from typing import Annotated, Optional
+
+from pydantic import EmailStr, model_validator, StringConstraints
+from sqlmodel import Field, Relationship, SQLModel
+from src.api.models.baseModel import TimeStampedModel, TimeStampReadModel
+from src.api.models.roleModel import RoleRead
+
+
+class User(TimeStampedModel, table=True):
+    id: Optional[int] = Field(default=None, primary_key=True)
+    full_name: str = Field(max_length=50)
+    email: EmailStr
+    password: str
+    phone: Annotated[
+        Optional[str],
+        StringConstraints(pattern=r"^\d{11}$"),
+        Field(description="User's Phone Number"),
+    ]
+    is_active: bool = Field(default=True)
+    role_id: Optional[int] = Field(default=None, foreign_key="user_role.id")
+    role: Optional["Role"] = Relationship(back_populates="users")
+
+
+class RegisterUser(SQLModel):
+    full_name: str
+    email: EmailStr
+    password: str
+    confirm_password: str
+
+    @model_validator(mode="before")
+    def check_password_match(cls, values):
+        if values.get("password") != values.get("confirm_password"):
+            raise ValueError("Passwords do not match")
+        return values
+
+
+class UserRead(TimeStampReadModel):
+    id: int
+    full_name: str
+    email: EmailStr
+    role: Optional[RoleRead] = None
+
+
+class LoginRequest(SQLModel):
+    email: EmailStr
+    password: str
