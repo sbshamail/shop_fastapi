@@ -3,7 +3,12 @@ from sqlalchemy.orm import selectinload
 from sqlalchemy import select
 from fastapi import APIRouter, Response
 from config import ACCESS_TOKEN_EXPIRE_MINUTES
-from src.api.core.security import exist_user, hash_password, verify_password
+from src.api.core.security import (
+    create_access_token,
+    exist_user,
+    hash_password,
+    verify_password,
+)
 from src.api.models.roleModel import Role
 from src.api.models.userModel import RegisterUser, User, UserRead, LoginRequest
 from src.api.core import GetSession, api_response
