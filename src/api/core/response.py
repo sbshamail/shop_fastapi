@@ -1,4 +1,4 @@
-from typing import Any, Optional
+from typing import Any, Optional, Union
 
 from fastapi import HTTPException
 from fastapi.encoders import (
@@ -12,10 +12,10 @@ from fastapi.responses import (
 def api_response(
     code: int,
     detail: str,
-    data: Optional[Any] = None,
+    data: Optional[Union[dict, list]] = None,
     total: Optional[int] = None,
 ):
-    
+
     content = {
         "success": (1 if code < 300 else 0),
         "detail": detail,

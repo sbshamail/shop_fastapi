@@ -38,9 +38,21 @@ class UserRead(TimeStampReadModel):
     id: int
     full_name: str
     email: EmailStr
+    phone: Optional[str] = None
     role: Optional[RoleRead] = None
 
 
 class LoginRequest(SQLModel):
     email: EmailStr
     password: str
+
+
+class UserUpdate(SQLModel):
+    full_name: Optional[str] = None
+    email: Optional[EmailStr] = None
+    phone: Optional[str] = None
+    password: Optional[str] = None
+
+
+class UpdateUserByAdmin(UserUpdate):
+    role: Optional[RoleRead] = None

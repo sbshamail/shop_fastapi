@@ -1,17 +1,26 @@
 from datetime import datetime, timedelta, timezone
 from sqlalchemy.orm import selectinload
 from sqlalchemy import select
-from fastapi import APIRouter, Response
-from config import ACCESS_TOKEN_EXPIRE_MINUTES
+from fastapi import APIRouter, Request, Response
+from src.config import ACCESS_TOKEN_EXPIRE_MINUTES
 from src.api.core.security import (
     create_access_token,
+    decode_token,
     exist_user,
     hash_password,
     verify_password,
+    verify_refresh_token,
 )
 from src.api.models.roleModel import Role
 from src.api.models.userModel import RegisterUser, User, UserRead, LoginRequest
-from src.api.core import GetSession, api_response
+from src.api.core import (
+    GetSession,
+    api_response,
+    requireSignin,
+    requireAdmin,
+    requirePermission,
+)
+
 
 router = APIRouter(tags=["auth"])
 
@@ -95,12 +104,17 @@ def login_user(
     response: Response,
     session: GetSession,
 ):
-    user = session.exec(
-        select(User).options(selectinload(User.role)).where(User.email == request.email)
-    ).first()
+    user = (
+        session.exec(
+            select(User)
+            .options(selectinload(User.role))
+            .where(User.email == request.email)
+        )
+        .scalars()
+        .first()
+    )
     if not user:
         return api_response(404, "User not found")
-
     if not verify_password(request.password, user.password):
         return api_response(401, "Incorrect password")
 
@@ -117,7 +131,6 @@ def login_user(
         "role": role_title,
         "permissions": permissions,
     }
-
     access_token = create_access_token(user_data=user_data)
     refresh_token = create_access_token(user_data=user_data, refresh=True)
 
@@ -144,3 +157,63 @@ def login_user(
     }
 
     return api_response(200, "Login successful", content)
+
+
+@router.post(
+    "/refresh",
+)
+def refresh_token(
+    refresh_token: str,
+):
+    if not refresh_token:
+        api_response(401, "Missing refresh token")
+
+    payload = verify_refresh_token(refresh_token)
+    if not payload:
+        raise api_response(401, "Invalid refresh token")
+    user = decode_token(refresh_token)
+    # user = UserRead.model_validate(db_user)
+    access_token = create_access_token(user)
+    new_refresh_token = create_access_token(user_data=user, refresh=True)
+
+    return api_response(
+        200,
+        "Refresh",
+        {
+            "access_token": access_token,
+            "refresh_token": new_refresh_token,
+            "user": user,
+        },
+    )
+
+
+@router.post("/logout")
+def logout(response: Response):
+    response.delete_cookie("refresh_token")
+    response.delete_cookie("access_token")
+    return {"message": "Logged out"}
+
+
+@router.get("/testauth", response_model=dict)
+def test_auth(
+    user: requireSignin,
+):
+    return api_response(
+        200,
+        "Token is valid",
+        {"user": user},
+    )
+
+
+@router.get("/testadmin")
+def get_admin_data(
+    user: requireAdmin,
+):
+    return {"message": f"Hello Admin {user['email']}"}
+
+
+@router.get("/testpermission")
+def get_admin_data(
+    user=requirePermission("all"),
+):
+    return {"message": f"Hello Admin {user}"}

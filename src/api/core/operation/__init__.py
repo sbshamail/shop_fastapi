@@ -2,6 +2,8 @@ from datetime import datetime, timezone
 from fastapi import Query
 from sqlmodel import Session, SQLModel, select
 from typing import List
+from src.api.core.response import api_response
+from src.lib.db_con import get_session
 from src.api.core.operation.list_operation_helper import (
     applyFilters,
 )
@@ -9,7 +11,12 @@ from src.api.core.operation.list_operation_helper import (
 
 # Update only the fields that are provided in the request
 # customFields = ["phone", "firstname", "lastname", "email"]
-def updateOp(instance, request, customFields=None):
+def updateOp(
+    instance,
+    request,
+    session,
+    customFields=None,
+):
     if customFields:
         for field in customFields:
             if hasattr(request, field):
@@ -22,6 +29,8 @@ def updateOp(instance, request, customFields=None):
             setattr(instance, key, value)
     if hasattr(instance, "updated_at"):
         instance.updated_at = datetime.now(timezone.utc)
+    session.add(instance)
+
     return instance
 
 
@@ -75,3 +84,57 @@ def listop(
     results = session.exec(paginated_stmt).all()
 
     return {"data": results, "total": total_count}
+
+
+def listRecords(
+    query_params: dict,
+    searchFields: list[str],
+    Model,
+    Schema,
+):
+    session = next(get_session())  # get actual Session object
+    try:
+        # Extract params from query dict
+        dateRange = query_params.get("dateRange")
+        numberRange = query_params.get("numberRange")
+        searchTerm = query_params.get("searchTerm")
+        columnFilters = query_params.get("columnFilters")
+        page = int(query_params.get("page", 1))
+        skip = int(query_params.get("skip", 0))
+        limit = int(query_params.get("limit", 10))
+
+        filters = {
+            "searchTerm": searchTerm,
+            "columnFilters": columnFilters,
+            "dateRange": dateRange,
+            "numberRange": numberRange,
+        }
+        searchFields = [
+            "full_name",
+            "email",
+            "phone",
+            "role.title",
+        ]
+        result = listop(
+            session=session,
+            Model=Model,
+            searchFields=searchFields,
+            filters=filters,
+            skip=skip,
+            page=page,
+            limit=limit,
+        )
+
+        if not result["data"]:
+            return api_response(404, "No User found")
+        # Convert each SQLModel Product instance into a UserRead Pydantic model
+        list_data = [Schema.model_validate(prod) for prod in result["data"]]
+
+        return api_response(
+            200,
+            "Users found",
+            list_data,
+            result["total"],
+        )
+    finally:
+        session.close()

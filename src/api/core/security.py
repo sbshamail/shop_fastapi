@@ -14,9 +14,9 @@ from fastapi.security import (
     HTTPBearer,
 )
 
-from api.core.response import api_response
-from config import ACCESS_TOKEN_EXPIRE_MINUTES, SECRET_KEY
-from src.api.models.userModel import User
+from src.config import ACCESS_TOKEN_EXPIRE_MINUTES, SECRET_KEY
+from src.api.core.response import api_response
+from src.api.models.userModel import User, UserRead
 
 ALGORITHM = "HS256"
 
@@ -50,7 +50,7 @@ def create_access_token(
         expire = datetime.now(timezone.utc) + timedelta(days=30)
     else:
         expire = datetime.now(timezone.utc) + (
-            expires or timedelta(days=ACCESS_TOKEN_EXPIRE_MINUTES)
+            expires or timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
         )
 
     payload = {
@@ -64,6 +64,14 @@ def create_access_token(
         algorithm=ALGORITHM,
     )
     return token
+
+
+def verify_refresh_token(token: str):
+    try:
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        return payload
+    except JWTError:
+        return None
 
 
 def decode_token(
