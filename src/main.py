@@ -1,6 +1,7 @@
 from contextlib import asynccontextmanager
 from fastapi import FastAPI
-from src.api.router import authRoute, userRoute
+
+from src.api.router import authRoute, userRoute, roleRoute, categoryRoute
 
 
 # Define app lifespan — this runs once when the app starts and when it shuts down
@@ -21,3 +22,5 @@ def root():
 
 app.include_router(authRoute.router)
 app.include_router(userRoute.router)
+app.include_router(roleRoute.router)
+app.include_router(categoryRoute.router)

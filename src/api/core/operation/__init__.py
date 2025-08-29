@@ -90,7 +90,8 @@ def listRecords(
     query_params: dict,
     searchFields: list[str],
     Model,
-    Schema,
+    join_options: list = [],
+    Schema: type[SQLModel] = None,
 ):
     session = next(get_session())  # get actual Session object
     try:
@@ -123,13 +124,15 @@ def listRecords(
             skip=skip,
             page=page,
             limit=limit,
+            join_options=join_options,
         )
 
         if not result["data"]:
-            return api_response(404, "No User found")
-        # Convert each SQLModel Product instance into a UserRead Pydantic model
+            return api_response(404, "No Result found")
+        # Convert each SQLModel Model instance into a ModelRead Pydantic model
+        if not Schema:
+            return result
         list_data = [Schema.model_validate(prod) for prod in result["data"]]
-
         return api_response(
             200,
             "Users found",

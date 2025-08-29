@@ -22,7 +22,7 @@ from src.api.core import (
 )
 
 
-router = APIRouter(tags=["auth"])
+router = APIRouter(tags=["Auth"])
 
 
 @router.post("/init", response_model=UserRead)

@@ -1,0 +1,38 @@
+from typing import List, Optional
+
+from sqlmodel import Field, Relationship, SQLModel
+from src.api.models.baseModel import TimeStampedModel
+
+
+class Category(TimeStampedModel, table=True):
+    id: Optional[int] = Field(default=None, primary_key=True)
+    title: str = Field(index=True, unique=True, max_length=100)
+    description: Optional[str] = None
+
+    parent_id: Optional[int] = Field(default=None, foreign_key="category.id")
+    parent: Optional["Category"] = Relationship(
+        back_populates="children",
+        sa_relationship_kwargs={"remote_side": "Category.id"},
+    )
+    children: List["Category"] = Relationship(back_populates="parent")
+    # products: List["Product"] = Relationship(back_populates="category")
+
+
+class CategoryCreate(SQLModel):
+    title: str
+    description: Optional[str] = None
+    parent_id: Optional[int] = None
+
+
+class CategoryRead(SQLModel):
+    id: int
+    title: str
+    description: Optional[str] = None
+    parent_id: Optional[int] = None
+
+    class Config:
+        from_attributes = True  # enable ORM mode / attribute mapping
+
+
+class CategoryReadNested(CategoryRead):
+    children: Optional[list["CategoryReadNested"]] = None

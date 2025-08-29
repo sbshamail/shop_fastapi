@@ -55,4 +55,4 @@ class UserUpdate(SQLModel):
 
 
 class UpdateUserByAdmin(UserUpdate):
-    role: Optional[RoleRead] = None
+    role_id: Optional[int] = None

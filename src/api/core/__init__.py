@@ -1,5 +1,5 @@
 from .operation import updateOp, listop, listRecords
-from .response import api_response
+from .response import api_response, raiseExceptions
 from .dependencies import GetSession, requireSignin, requirePermission, requireAdmin
 
 
@@ -9,6 +9,7 @@ __all__ = [
     "requirePermission",
     "requireAdmin",
     "api_response",
+    "raiseExceptions",
     "updateOp",
     "listop",
     "listRecords",

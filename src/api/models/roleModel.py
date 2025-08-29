@@ -20,3 +20,13 @@ class RoleRead(TimeStampReadModel):
     id: int
     title: str
     permissions: list[str]
+
+
+class RoleCreate(SQLModel):
+    title: str
+    permissions: list[str]
+
+
+class RoleUpdate(SQLModel):
+    title: Optional[str]
+    permissions: Optional[list[str]]
