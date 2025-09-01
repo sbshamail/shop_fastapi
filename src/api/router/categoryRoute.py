@@ -10,6 +10,7 @@ from src.api.models.categoryModel import (
     CategoryCreate,
     CategoryRead,
     CategoryReadNested,
+    CategoryUpdate,
 )
 from src.api.core.dependencies import GetSession, requirePermission
 from sqlalchemy.orm import selectinload
@@ -31,49 +32,101 @@ def create(
     )
 
 
-# @router.put("/update/{id}", response_model=RoleRead)
-# def update_role(
-#     id: int,
-#     request: RoleUpdate,
-#     session: GetSession,
-#     user=requirePermission("role"),
-# ):
+@router.put("/update/{id}")
+def update(
+    id: int,
+    request: CategoryUpdate,
+    session: GetSession,
+    user=requirePermission("category"),
+):
 
-#     role = session.get(Role, id)  # Like findById
-#     raiseExceptions((role, 404, "Role not found"))
-#     updateOp(role, request, session)
+    updateData = session.get(Category, id)  # Like findById
+    raiseExceptions((updateData, 404, "Category not found"))
+    updateOp(updateData, request, session)
 
-#     session.commit()
-#     session.refresh(role)
-#     return api_response(200, "Role Update Successfully", role)
+    session.commit()
+    session.refresh(updateData)
+    return api_response(
+        200,
+        "Category Update Successfully",
+        CategoryReadNested.model_validate(updateData),
+    )
 
 
-# @router.get("/read/{id}")
-# def get_user(
-#     id: int,
-#     session: GetSession,
-#     user=requirePermission("role"),
-# ):
+@router.get("/read/{id}", response_model=CategoryReadNested)
+def get(
+    id: int,
+    session: GetSession,
+    user=requirePermission("category"),
+):
 
-#     role = session.get(Role, id)  # Like findById
-#     raiseExceptions((role, 404, "Role not found"))
+    read = session.get(Category, id)  # Like findById
+    raiseExceptions((read, 404, "Category not found"))
 
-#     return api_response(200, "Role Found", role)
+    return api_response(200, "Category Found", CategoryReadNested.model_validate(read))
 
 
 # ❗ DELETE
-# @router.delete("/{id}", response_model=dict)
-# def delete_user(
-#     id: int,
-#     session: GetSession,
-#     user=requirePermission("role-delete"),
-# ):
-#     role = session.get(Role, id)
-#     raiseExceptions((role, 404, "Role not found"))
+@router.delete("/{id}", response_model=dict)
+def delete(
+    id: int,
+    session: GetSession,
+    user=requirePermission("category-delete"),
+):
+    category = session.get(Category, id)
+    raiseExceptions((category, 404, "category not found"))
 
-#     session.delete(role)
-#     session.commit()
-#     return api_response(404, f"Role {role.title} deleted")
+    children = session.exec(select(Category).where(Category.parent_id == id)).all()
+    raiseExceptions(
+        (
+            len(children) > 0,
+            400,
+            f"Cannot delete category '{category.title}' because it has child categories.",
+            True,
+        )
+    )
+    session.delete(category)
+    session.commit()
+    return api_response(404, f"Category {category.title} deleted")
+
+
+def delete_category_tree(session, category_id: int):
+    """
+    Recursively delete a category and all its children.
+    """
+    # Get all direct children
+    children = (
+        session.exec(select(Category).where(Category.parent_id == category_id))
+        .scalars()
+        .all()
+    )
+
+    # Recursively delete children first
+    for child in children:
+        print("+++++++++++++++++++++++++", child)
+        delete_category_tree(session, child.id)
+
+    # Finally delete this category
+    category = session.get(Category, category_id)
+    if category:
+        session.delete(category)
+
+
+@router.delete("/delete-parent/{id}")
+def deleteMany(
+    id: int,
+    session: GetSession,
+    user=requirePermission("category-delete"),
+):
+    category = session.get(Category, id)
+    raiseExceptions((category, 404, "category not found"))
+    # Recursively delete this category and all its children
+    delete_category_tree(session, id)
+    session.commit()
+
+    return api_response(
+        200, f"Category tree with root {category.title} deleted successfully"
+    )
 
 
 # ✅ LIST
@@ -124,4 +177,4 @@ def list(
         if not cat.parent_id:  # no parent_id means it's a root
             roots.append(cat)
 
-    return api_response(200, "Users found", roots, result["total"])
+    return api_response(200, "Category found", roots, result["total"])

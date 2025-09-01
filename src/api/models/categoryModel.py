@@ -25,6 +25,12 @@ class CategoryCreate(SQLModel):
     parent_id: Optional[int] = None
 
 
+class CategoryUpdate(SQLModel):
+    title: Optional[str] = None
+    description: Optional[str] = None
+    parent_id: Optional[int] = None
+
+
 class CategoryRead(SQLModel):
     id: int
     title: str
@@ -41,3 +47,6 @@ class CategoryReadNested(BaseModel):
     description: str | None = None
     parent_id: int | None = None
     children: list["CategoryReadNested"] = Field(default_factory=list)
+
+    class Config:
+        from_attributes = True
