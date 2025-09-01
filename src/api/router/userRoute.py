@@ -1,11 +1,13 @@
 from typing import Optional
 from fastapi import (
     APIRouter,
+    Depends,
     Query,
     Request,
 )
 from sqlalchemy import select
 
+from src.api.core.dependencies import ListQueryParams
 from src.api.core.security import hash_password
 from src.api.core import listRecords, updateOp, requireSignin
 from src.api.core.dependencies import GetSession, requirePermission, requireAdmin
@@ -55,10 +57,12 @@ def update_user(
 # ✅ READ ALL
 @router.get("/list", response_model=list[UserRead])  # no response_model
 def list_users(
-    request: Request,
     user: requireAdmin,
+    query_params: ListQueryParams,
 ):
-    query_params = dict(request.query_params)
+    # query_params = dict(request.query_params)
+
+    query_params = vars(query_params)
     searchFields = [
         "full_name",
         "email",

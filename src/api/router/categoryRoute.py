@@ -1,6 +1,7 @@
-from fastapi import APIRouter, Request
+from typing import Annotated
+from fastapi import APIRouter, Depends, Request
 from sqlalchemy import select
-from src.api.core.pydantic import List_QueryParams
+from src.api.core.dependencies import ListQueryParams
 from src.api.core.utility import Print
 from src.api.core.operation import listRecords, updateOp
 from src.api.core.response import api_response, raiseExceptions
@@ -78,10 +79,10 @@ def create(
 # ✅ LIST
 @router.get("/list", response_model=list[CategoryReadNested])
 def list(
-    request: Request,
+    query_params: ListQueryParams,
     user=requirePermission("category"),
 ):
-    query_params = dict(request.query_params)
+    query_params = vars(query_params)
     searchFields = [
         "title",
     ]
@@ -92,22 +93,35 @@ def list(
         join_options=[selectinload(Category.children)],
     )
     categories = result["data"]
-
+    if (
+        categories and categories[0].parent_id
+    ):  # assuming your search result is in `categories`
+        # Treat the first search result as root by ignoring its parent
+        categories[0].parent_id = None
     category_map = {
-        c.id: CategoryReadNested.model_validate(c) for c in categories  # ✅ works now
+        c.id: CategoryReadNested(
+            id=c.id,
+            title=c.title,
+            description=c.description,
+            parent_id=c.parent_id,
+            children=[],
+        )
+        for c in categories
     }
-    print(category_map)
     roots = []
 
+    # Step 1: attach children
     for cat in category_map.values():
-        if cat.parent_id:
+        if cat.parent_id and cat.id != cat.parent_id:  # has a parent
             parent = category_map.get(cat.parent_id)
             if parent:
-                # ✅ Prevent duplicates
                 if not any(child.id == cat.id for child in parent.children):
                     parent.children.append(cat)
-        else:
-            if not any(root.id == cat.id for root in roots):
-                roots.append(cat)
+        # ❌ DO NOT append to roots here
+
+    # Step 2: collect only roots
+    for cat in category_map.values():
+        if not cat.parent_id:  # no parent_id means it's a root
+            roots.append(cat)
 
     return api_response(200, "Users found", roots, result["total"])

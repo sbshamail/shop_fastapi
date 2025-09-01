@@ -110,12 +110,7 @@ def listRecords(
             "dateRange": dateRange,
             "numberRange": numberRange,
         }
-        searchFields = [
-            "full_name",
-            "email",
-            "phone",
-            "role.title",
-        ]
+
         result = listop(
             session=session,
             Model=Model,

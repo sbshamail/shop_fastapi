@@ -2,7 +2,7 @@ from fastapi import APIRouter, Request
 from src.api.core.operation import listRecords, updateOp
 from src.api.core.response import api_response, raiseExceptions
 from src.api.models.roleModel import Role, RoleCreate, RoleRead, RoleUpdate
-from src.api.core.dependencies import GetSession, requirePermission
+from src.api.core.dependencies import GetSession, ListQueryParams, requirePermission
 
 
 router = APIRouter(prefix="/role", tags=["Role"])
@@ -67,10 +67,10 @@ def delete_user(
 # ✅ LIST
 @router.get("/list", response_model=list[RoleRead])
 def list(
-    request: Request,
+    query_params: ListQueryParams,
     user=requirePermission("role"),
 ):
-    query_params = dict(request.query_params)
+    query_params = vars(query_params)
     searchFields = [
         "title",
     ]

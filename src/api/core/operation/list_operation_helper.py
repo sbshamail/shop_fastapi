@@ -127,7 +127,7 @@ def applyFilters(
         search_filters = []
         for col in searchFields:
             attr, statement = resolve_column(Model, col, statement)
-            search_filters.apiend(attr.ilike(f"%{searchTerm}%"))
+            search_filters.append(attr.ilike(f"%{searchTerm}%"))
         statement = statement.where(or_(*search_filters))
 
     # Column-specific search
@@ -158,9 +158,9 @@ def applyFilters(
                 value = _coerce_value_for_column(col_type, value, col)
 
                 if isinstance(value, str):
-                    filters.apiend(attr.ilike(f"%{value}%"))
+                    filters.append(attr.ilike(f"%{value}%"))
                 else:
-                    filters.apiend(attr == value)
+                    filters.append(attr == value)
 
             statement = statement.where(and_(*filters))
             return statement
@@ -179,9 +179,9 @@ def applyFilters(
             value = _coerce_value_for_column(col_type, value, col)
 
             if isinstance(value, str):
-                filters.apiend(attr.ilike(f"%{value}%"))
+                filters.append(attr.ilike(f"%{value}%"))
             else:
-                filters.apiend(attr == value)
+                filters.append(attr == value)
 
         statement = statement.where(and_(*filters))
 

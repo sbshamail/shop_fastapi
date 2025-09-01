@@ -1,5 +1,6 @@
 from typing import List, Optional
 
+from pydantic import BaseModel
 from sqlmodel import Field, Relationship, SQLModel
 from src.api.models.baseModel import TimeStampedModel
 
@@ -34,5 +35,9 @@ class CategoryRead(SQLModel):
         from_attributes = True  # enable ORM mode / attribute mapping
 
 
-class CategoryReadNested(CategoryRead):
-    children: Optional[list["CategoryReadNested"]] = None
+class CategoryReadNested(BaseModel):
+    id: int
+    title: str
+    description: str | None = None
+    parent_id: int | None = None
+    children: list["CategoryReadNested"] = Field(default_factory=list)

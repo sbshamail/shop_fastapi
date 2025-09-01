@@ -18,5 +18,8 @@ reset:
 	uv venv .venv
 	source .venv/bin/activate && uv pip install -r pyproject.toml && uv pip install psycopg2-binary
 
+gitpush:
+	git add . && git commit -m "auto" && git push
+
 
 
