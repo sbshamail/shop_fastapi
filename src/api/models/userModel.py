@@ -1,4 +1,4 @@
-from typing import Annotated, Optional
+from typing import Annotated, List, Optional
 
 from pydantic import EmailStr, model_validator, StringConstraints
 from sqlmodel import Field, Relationship, SQLModel
@@ -19,6 +19,8 @@ class User(TimeStampedModel, table=True):
     is_active: bool = Field(default=True)
     role_id: Optional[int] = Field(default=None, foreign_key="user_role.id")
     role: Optional["Role"] = Relationship(back_populates="users")
+    products: List["Product"] = Relationship(back_populates="user")
+    ratings: List["Rating"] = Relationship(back_populates="user")
 
 
 class RegisterUser(SQLModel):
@@ -34,11 +36,14 @@ class RegisterUser(SQLModel):
         return values
 
 
-class UserRead(TimeStampReadModel):
+class UserReadBase(TimeStampReadModel):
     id: int
     full_name: str
     email: EmailStr
     phone: Optional[str] = None
+
+
+class UserRead(UserReadBase):
     role: Optional[RoleRead] = None
 
 

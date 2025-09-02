@@ -157,6 +157,8 @@ def list(
             title=c.title,
             description=c.description,
             parent_id=c.parent_id,
+            created_at=c.created_at,
+            updated_at=c.updated_at,
             children=[],
         )
         for c in categories

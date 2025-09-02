@@ -1,8 +1,9 @@
+from datetime import datetime
 from typing import List, Optional
 
 from pydantic import BaseModel
 from sqlmodel import Field, Relationship, SQLModel
-from src.api.models.baseModel import TimeStampedModel
+from src.api.models.baseModel import TimeStampReadModel, TimeStampedModel
 
 
 class Category(TimeStampedModel, table=True):
@@ -16,7 +17,7 @@ class Category(TimeStampedModel, table=True):
         sa_relationship_kwargs={"remote_side": "Category.id"},
     )
     children: List["Category"] = Relationship(back_populates="parent")
-    # products: List["Product"] = Relationship(back_populates="category")
+    products: List["Product"] = Relationship(back_populates="category")
 
 
 class CategoryCreate(SQLModel):
@@ -31,7 +32,7 @@ class CategoryUpdate(SQLModel):
     parent_id: Optional[int] = None
 
 
-class CategoryRead(SQLModel):
+class CategoryRead(TimeStampReadModel):
     id: int
     title: str
     description: Optional[str] = None
@@ -41,7 +42,7 @@ class CategoryRead(SQLModel):
         from_attributes = True  # enable ORM mode / attribute mapping
 
 
-class CategoryReadNested(BaseModel):
+class CategoryReadNested(TimeStampReadModel):
     id: int
     title: str
     description: str | None = None

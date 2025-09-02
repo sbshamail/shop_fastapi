@@ -130,7 +130,7 @@ def listRecords(
         list_data = [Schema.model_validate(prod) for prod in result["data"]]
         return api_response(
             200,
-            "Users found",
+            f"data found",
             list_data,
             result["total"],
         )
