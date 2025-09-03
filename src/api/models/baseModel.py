@@ -9,7 +9,7 @@ class TimeStampedModel(SQLModel):
     updated_at: Optional[datetime] = None
 
 
-class TimeStampReadModel(BaseModel):
+class TimeStampReadModel(SQLModel):
     created_at: datetime
     updated_at: Optional[datetime] = None
 

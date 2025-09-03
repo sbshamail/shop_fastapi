@@ -66,7 +66,7 @@ def raiseExceptions(*conditions: tuple[Any, int | None, str | None, bool | None]
         code = cond[1] if len(cond) > 1 else 400
         detail = cond[2] if len(cond) > 2 else "error"
         isCond = cond[3] if len(cond) > 3 else False
-        print(isCond, condition)
+
         if isCond and condition:
             if condition:  # Fail if condition is True
                 return api_response(code, detail)

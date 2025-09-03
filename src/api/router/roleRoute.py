@@ -37,7 +37,7 @@ def update_role(
 
 
 @router.get("/read/{id}")
-def get_user(
+def get_role(
     id: int,
     session: GetSession,
     user=requirePermission("role"),
@@ -50,8 +50,8 @@ def get_user(
 
 
 # ❗ DELETE
-@router.delete("/{id}", response_model=dict)
-def delete_user(
+@router.delete("/role/{id}", response_model=dict)
+def delete_role(
     id: int,
     session: GetSession,
     user=requirePermission("role-delete"),

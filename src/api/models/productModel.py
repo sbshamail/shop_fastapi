@@ -1,5 +1,6 @@
 from typing import List, Optional
 
+from sqlalchemy import JSON
 from sqlmodel import Field, Relationship, SQLModel
 from src.api.models.baseModel import TimeStampReadModel, TimeStampedModel
 from src.api.models.userModel import UserReadBase
@@ -15,7 +16,7 @@ class Product(TimeStampedModel, table=True):
 
     title: str = Field(max_length=100)
     description: Optional[str] = None
-    # images: List[str] = Field(default_factory=list)
+    images: Optional[list[str]] = Field(default=None, sa_type=JSON)
     price: float
     sale_price: Optional[float] = None
     stock: int = Field(default=0)
@@ -28,7 +29,6 @@ class Product(TimeStampedModel, table=True):
 
 
 class ProductCreate(SQLModel):
-    user_id: int
     category_id: int
     title: str = Field(max_length=100)
     description: Optional[str] = None
@@ -36,6 +36,16 @@ class ProductCreate(SQLModel):
     sale_price: Optional[float] = None
     stock: int = Field(default=0)
     is_active: bool = Field(default=True)
+
+
+class ProductUpdate(SQLModel):
+    category_id: Optional[int] = None
+    title: Optional[str] = Field(default=None, max_length=100)
+    description: Optional[str] = None
+    price: Optional[float] = None
+    sale_price: Optional[float] = None
+    stock: Optional[int] = None
+    is_active: Optional[bool] = None
 
 
 class ProductRead(TimeStampReadModel):
@@ -50,7 +60,7 @@ class ProductRead(TimeStampReadModel):
     is_active: bool
     user: Optional[UserReadBase] = None
     category: Optional[CategoryRead] = None
-    ratings: Optional[List[Rating]] = None
+    # ratings: Optional[List[Rating]] = None
     avg_rating: Optional[float] = None
 
     class Config:

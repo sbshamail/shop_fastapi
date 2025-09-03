@@ -67,7 +67,7 @@ def get(
 
 
 # ❗ DELETE
-@router.delete("/{id}", response_model=dict)
+@router.delete("/delete/{id}", response_model=dict)
 def delete(
     id: int,
     session: GetSession,
