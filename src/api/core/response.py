@@ -38,23 +38,10 @@ def api_response(
     )
 
 
-def cond_response(
-    code: int = 400,
-    detail: str = "error",
-    condition: Any = None,
-    isCond: bool = False,
-):
-    if isCond:
-        if condition:
-            return api_response(code, detail)
-        elif not condition:
-            return api_response(code, detail)
-
-
 def raiseExceptions(*conditions: tuple[Any, int | None, str | None, bool | None]):
     """
     Example usage:
-        resp = cond_response(
+        resp = raiseExceptions(
             (user, 404, "User not found"),
             (is_active, 403, "User is disabled",True),
         )
