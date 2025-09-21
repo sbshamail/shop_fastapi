@@ -1,6 +1,6 @@
-from typing import List, Optional
+from typing import Any, Dict, List, Optional
 
-from sqlalchemy import JSON
+from sqlalchemy import JSON, Column
 from sqlmodel import Field, Relationship, SQLModel
 from src.api.models.baseModel import TimeStampReadModel, TimeStampedModel
 from src.api.models.userModel import UserReadBase
@@ -16,7 +16,7 @@ class Product(TimeStampedModel, table=True):
 
     title: str = Field(max_length=100)
     description: Optional[str] = None
-    images: Optional[list[str]] = Field(default=None, sa_type=JSON)
+    images: Optional[List[Dict[str, Any]]] = Field(sa_column=Column(JSON))
     price: float
     sale_price: Optional[float] = None
     stock: int = Field(default=0)
@@ -36,6 +36,7 @@ class ProductCreate(SQLModel):
     sale_price: Optional[float] = None
     stock: int = Field(default=0)
     is_active: bool = Field(default=True)
+    images: Optional[List[Dict[str, Any]]]
 
 
 class ProductUpdate(SQLModel):
